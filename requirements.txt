@@ -5,3 +5,4 @@ streamlit
 matplotlib
 seaborn
 scikit-learn
+gdown
