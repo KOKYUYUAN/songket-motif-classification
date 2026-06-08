@@ -4,3 +4,4 @@ pillow
 streamlit
 matplotlib
 seaborn
+scikit-learn
