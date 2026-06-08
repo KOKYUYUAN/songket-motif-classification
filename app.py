@@ -180,7 +180,7 @@ st.title("🎨 Songket Motif Classification")
 st.markdown("Advanced classification system with performance metrics, model comparison, and batch processing.")
 
 # Create tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Classify Image", "Model Comparison", "Batch Processing", "Performance Metrics", "Model Info"])
+tab1, tab2, tab3, tab4 = st.tabs(["Classify Image", "Model Comparison", "Batch Processing", "Model Info"])
 
 # ==================== TAB 1: CLASSIFY IMAGE ====================
 with tab1:
@@ -380,121 +380,8 @@ with tab3:
             with col4:
                 st.metric("Max Confidence", f"{np.max(confidences):.2f}%")
 
-# ==================== TAB 4: PERFORMANCE METRICS ====================
+# ==================== TAB 4: MODEL INFO ====================
 with tab4:
-    st.subheader("📈 Model Performance Metrics")
-    st.markdown("Evaluate all models on the test dataset.")
-
-    test_dataset = load_test_dataset()
-
-    if test_dataset is None:
-        st.error("❌ Test dataset not found at: dataset/final_split/test")
-    else:
-        st.info(f"ℹ️ Test dataset contains {len(test_dataset)} images")
-
-        if st.button("🚀 Evaluate All Models", key="eval_button"):
-            st.markdown("**Evaluating models... This may take a few minutes.**")
-
-            models_list = ["resnet50", "vgg19", "googlenet", "alexnet"]
-            all_metrics = {}
-
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-
-            for idx, model_name in enumerate(models_list):
-                status_text.text(f"Evaluating {model_name.upper()}...")
-                model = load_model(model_name)
-
-                if model:
-                    metrics = evaluate_model_on_test_set(model, test_dataset)
-                    all_metrics[model_name] = metrics
-
-                progress_bar.progress((idx + 1) / len(models_list))
-
-            status_text.text("✅ Evaluation complete!")
-
-            # Display metrics comparison table
-            st.markdown("**Model Performance Comparison**")
-            metrics_data = []
-            for model_name, metrics in all_metrics.items():
-                metrics_data.append({
-                    'Model': model_name.upper(),
-                    'Accuracy': f"{metrics['accuracy']*100:.2f}%",
-                    'Precision': f"{metrics['precision']*100:.2f}%",
-                    'Recall': f"{metrics['recall']*100:.2f}%",
-                    'F1 Score': f"{metrics['f1']*100:.2f}%"
-                })
-
-            metrics_df = pd.DataFrame(metrics_data)
-            st.dataframe(metrics_df, use_container_width=True)
-
-            # Visualization: Metrics comparison
-            st.markdown("**Metrics Visualization**")
-            fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-
-            model_names_upper = [m.upper() for m in all_metrics.keys()]
-
-            # Accuracy
-            accuracies = [all_metrics[m]['accuracy']*100 for m in all_metrics.keys()]
-            axes[0, 0].bar(model_names_upper, accuracies, color='#3498db')
-            axes[0, 0].set_title("Accuracy", fontweight='bold')
-            axes[0, 0].set_ylim(0, 100)
-            for i, v in enumerate(accuracies):
-                axes[0, 0].text(i, v + 2, f'{v:.1f}%', ha='center', fontweight='bold')
-
-            # Precision
-            precisions = [all_metrics[m]['precision']*100 for m in all_metrics.keys()]
-            axes[0, 1].bar(model_names_upper, precisions, color='#2ecc71')
-            axes[0, 1].set_title("Precision", fontweight='bold')
-            axes[0, 1].set_ylim(0, 100)
-            for i, v in enumerate(precisions):
-                axes[0, 1].text(i, v + 2, f'{v:.1f}%', ha='center', fontweight='bold')
-
-            # Recall
-            recalls = [all_metrics[m]['recall']*100 for m in all_metrics.keys()]
-            axes[1, 0].bar(model_names_upper, recalls, color='#f39c12')
-            axes[1, 0].set_title("Recall", fontweight='bold')
-            axes[1, 0].set_ylim(0, 100)
-            for i, v in enumerate(recalls):
-                axes[1, 0].text(i, v + 2, f'{v:.1f}%', ha='center', fontweight='bold')
-
-            # F1 Score
-            f1_scores = [all_metrics[m]['f1']*100 for m in all_metrics.keys()]
-            axes[1, 1].bar(model_names_upper, f1_scores, color='#e74c3c')
-            axes[1, 1].set_title("F1 Score", fontweight='bold')
-            axes[1, 1].set_ylim(0, 100)
-            for i, v in enumerate(f1_scores):
-                axes[1, 1].text(i, v + 2, f'{v:.1f}%', ha='center', fontweight='bold')
-
-            plt.tight_layout()
-            st.pyplot(fig)
-
-            # Confusion matrices
-            st.markdown("**Confusion Matrices**")
-            fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-            axes = axes.flatten()
-
-            for idx, (model_name, metrics) in enumerate(all_metrics.items()):
-                cm = metrics['confusion_matrix']
-                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[idx],
-                           xticklabels=class_names, yticklabels=class_names)
-                axes[idx].set_title(f"{model_name.upper()} Confusion Matrix", fontweight='bold')
-                axes[idx].set_ylabel("True Label")
-                axes[idx].set_xlabel("Predicted Label")
-
-            plt.tight_layout()
-            st.pyplot(fig)
-
-            # Per-class metrics
-            st.markdown("**Per-Class Performance**")
-            for model_name, metrics in all_metrics.items():
-                st.markdown(f"**{model_name.upper()}**")
-                report = metrics['per_class_report']
-                per_class_df = pd.DataFrame(report).transpose()
-                st.dataframe(per_class_df.iloc[:-3], use_container_width=True)  # Exclude average rows
-
-# ==================== TAB 5: MODEL INFO ====================
-with tab5:
     st.subheader("📋 Model Information")
 
     selected_model_info = st.selectbox(
