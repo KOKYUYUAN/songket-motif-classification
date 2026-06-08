@@ -12,6 +12,8 @@ from pathlib import Path
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
 import io
 import csv
+import gdown
+import zipfile
 
 # Page configuration
 st.set_page_config(page_title="Songket Motif Classifier", layout="wide", initial_sidebar_state="expanded")
@@ -20,6 +22,14 @@ st.set_page_config(page_title="Songket Motif Classifier", layout="wide", initial
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MODELS_DIR = Path(__file__).parent
 class_names = ['bunga_pecah_lapan', 'pucuk_rebung', 'tampuk_manggis']
+
+# Google Drive model IDs (fill in your Google Drive file IDs)
+GDRIVE_MODEL_IDS = {
+    "resnet50": "1bmb5_rooHxAyF-qHOr2GoUL84kyzG-v9",
+    "vgg19": "1eTmSKPzIo5bgQUrnSXi9PR6tROTQArtT",
+    "googlenet": "1z1plZFq-6i7zKPiZTpHeezgjXXZoF69S",
+    "alexnet": "1RRqdUOwn6wW7nveXerXDqdTPAiM1lvKF"
+}
 
 # Preprocessing transform (must match training)
 preprocess = transforms.Compose([
@@ -30,12 +40,33 @@ preprocess = transforms.Compose([
 
 @st.cache_resource
 def load_model(model_name):
-    """Load a trained model."""
+    """Load a trained model. Downloads from Google Drive if not found locally."""
     model_path = MODELS_DIR / f"songket_motif_{model_name}_final.pth"
+    zip_path = MODELS_DIR / f"songket_motif_{model_name}_final.zip"
 
+    # Download from Google Drive if model doesn't exist locally
     if not model_path.exists():
-        st.error(f"❌ Model not found: {model_path}")
-        return None
+        gdrive_id = GDRIVE_MODEL_IDS.get(model_name)
+        if gdrive_id and gdrive_id != "YOUR_" + model_name.upper() + "_GDRIVE_ID":
+            try:
+                st.info(f"📥 Downloading {model_name} model from Google Drive...")
+                # Try downloading as ZIP first, then as .pth
+                if gdrive_id.endswith("_zip"):
+                    gdown.download(f"https://drive.google.com/uc?id={gdrive_id[:-4]}", str(zip_path), quiet=False)
+                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        zip_ref.extractall(MODELS_DIR)
+                    zip_path.unlink()  # Delete ZIP after extraction
+                    st.success(f"✅ Extracted {model_name} model successfully!")
+                else:
+                    gdown.download(f"https://drive.google.com/uc?id={gdrive_id}", str(model_path), quiet=False)
+                    st.success(f"✅ Downloaded {model_name} model successfully!")
+            except Exception as e:
+                st.error(f"❌ Failed to download {model_name}: {str(e)}")
+                return None
+        else:
+            st.error(f"❌ Model not found: {model_path}")
+            st.error("⚠️ Please upload model files or configure Google Drive IDs")
+            return None
 
     try:
         if model_name == "resnet50":
