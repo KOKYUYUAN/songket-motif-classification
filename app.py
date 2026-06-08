@@ -283,9 +283,9 @@ with tab2:
                 'Model': model_name.upper(),
                 'Predicted Class': result['predicted_class'].replace('_', ' ').title(),
                 'Confidence': f"{result['confidence']*100:.2f}%",
-                'Class 1': f"{result['probabilities'][0]*100:.1f}%",
-                'Class 2': f"{result['probabilities'][1]*100:.1f}%",
-                'Class 3': f"{result['probabilities'][2]*100:.1f}%"
+                class_names[0].replace('_', ' ').title(): f"{result['probabilities'][0]*100:.1f}%",
+                class_names[1].replace('_', ' ').title(): f"{result['probabilities'][1]*100:.1f}%",
+                class_names[2].replace('_', ' ').title(): f"{result['probabilities'][2]*100:.1f}%"
             })
 
         comparison_df = pd.DataFrame(comparison_data)
